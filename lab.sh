@@ -14,10 +14,6 @@ die(){ echo "ERROR: $*" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || die "Run as root."
 
 
-# ---------- pre) Kill Firewalld ----------
-systemctl stop firewalld
-systemctl disable firewalld
-
 # ---------- 0) Package baseline ----------
 log "Refreshing dnf metadata & installing baseline packages..."
 dnf -y makecache || true
