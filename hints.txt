@@ -1,0 +1,15 @@
+## Tip
+
+This lab is designed to simulate **real-world troubleshooting**. Think in layers:
+- Are services running?
+- Are they listening on the right ports?
+- Are they blocked by configuration or conflicts?
+- Are logs, cron jobs, or misconfigurations causing resource problems?
+
+Hints (read only if stuck):
+- Use: ss -tulpen   -> see which process holds port 80.
+- Use: systemctl status <service> and journalctl -u <service> for errors.
+- If a service cannot write a file, check ownership/permissions of its target directory.
+- Continuous log writers often need copytruncate or a restart on rotation.
+- Cron jobs can spawn unexpected load; check /etc/cron.* and /etc/cron.d.
+- Large files under /var/log can be safely removed if not in use (confirm with lsof).

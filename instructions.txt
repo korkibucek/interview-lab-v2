@@ -1,0 +1,50 @@
+# Linux Troubleshooting Lab – Candidate Instructions
+
+You are connected to a Linux server environment prepared with several faults.  
+Your task is to diagnose and fix the issues so that the system is healthy and functioning as expected.  
+
+You may use any Linux command-line tools installed on the system and install any other tools you need. You may also use AI assistants and Google.
+
+---
+
+## Objectives
+
+Please complete the following:
+
+1. **Web Service Accessibility**
+   - A web service is installed but currently inaccessible from outside the server.  
+   - Investigate why and restore it to working order.
+
+2. **Broken Application Service**
+   - There is a custom systemd service (`app.service`) that fails to start.  
+   - Diagnose the reason and fix it so that it runs successfully.
+
+3. **Excessive Logging**
+   - One service is generating a very chatty log.  
+   - Log rotation is configured but not functioning correctly.  
+   - Correct the logrotate configuration so logs rotate and do not fill the disk.
+
+4. **High CPU Usage**
+   - The server is suffering from high CPU usage due to runaway processes.  
+   - Identify the cause, stop the problem, and prevent it from recurring.
+
+5. **Disk Pressure**
+   - The root filesystem is under disk pressure from a large file.  
+   - Investigate, decide on the correct action, and recover sufficient space.
+
+---
+
+## Constraints
+
+- Do not reboot the server.
+- Do not change SSH configuration (you must keep your own access intact).  
+- Time limit of 30 minutes
+
+---
+
+## Deliverables
+
+At the end of the exercise, please mention what you would do to prevent these issues in production.  
+
+---
+
