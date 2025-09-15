@@ -14,6 +14,7 @@ Please complete the following:
 1. **Web Service Accessibility**
    - A web service is installed but currently inaccessible from outside the server.  
    - Investigate why and restore it to working order.
+   - The web server only needs to run on port 80.
 
 2. **Broken Application Service**
    - There is a custom systemd service (`app.service`) that fails to start.  
