@@ -1,22 +1,26 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2034  # constants below are consumed by scripts that source this file
 # lab/lib/common.sh
-# Shared constants and helpers for the Interview Lab tooling.
+# Shared constants and helpers for the Interview Lab tooling (AlmaLinux 10).
 # Sourced by deploy/*.sh and scripts/*.sh. Not meant to be executed directly.
 #
-# Everything that the deploy, breakage, reset and validation scripts need to
-# agree on lives here, so the "broken state" and the "checks for the broken
-# state" can never drift apart.
+# Everything the deploy, breakage, reset and validation scripts need to agree on
+# lives here, so the "broken state" and the "checks for the broken state" can
+# never drift apart.
 
 # --- Identity / paths --------------------------------------------------------
 LAB_NAME="interview-lab"
 CANDIDATE_USER="candidate"
 APP_USER="appuser"
+ADMIN_GROUP="wheel"          # AlmaLinux/RHEL sudo group
+SSH_SERVICE="sshd"
+CRON_SERVICE="crond"
+NOLOGIN_SHELL="/sbin/nologin"
 
 # Web layer (objective A)
-WEB_ROOT="/var/www/lab"
-NGINX_SITE_AVAILABLE="/etc/nginx/sites-available/lab"
-NGINX_SITE_ENABLED="/etc/nginx/sites-enabled/lab"
+WEB_ROOT="/usr/share/nginx/html"           # RHEL nginx default docroot
+NGINX_MAIN="/etc/nginx/nginx.conf"
+NGINX_CONF="/etc/nginx/conf.d/lab.conf"
 WRONG_WEB_PORT="8080"   # where break-lab leaves nginx listening
 RIGHT_WEB_PORT="80"     # where the candidate must make it listen
 
@@ -43,7 +47,7 @@ CPUHOG_CRON="/etc/cron.d/cpuhog"
 # DNS layer (objective C)
 RESOLV_CONF="/etc/resolv.conf"
 BOGUS_DNS="192.0.2.53"               # RFC5737 TEST-NET-1: routable nowhere
-DNS_PROBE_HOST="deb.debian.org"      # a name a healthy resolver will answer
+DNS_PROBE_HOST="mirrors.almalinux.org"  # a name a healthy resolver will answer
 
 # Disk pressure layer (objective F)
 BIGFILE="/var/log/verbose-debug.log"
@@ -54,6 +58,8 @@ DISK_PRESSURE_PCT=85                               # "broken" means at/above thi
 # State / bookkeeping
 STATE_DIR="/var/lib/${LAB_NAME}"
 CANDIDATE_CRED_FILE="${STATE_DIR}/candidate-credentials.txt"
+NGINX_BACKUP="${STATE_DIR}/nginx.conf.orig"
+RESOLV_BACKUP="${STATE_DIR}/resolv.conf.orig"
 
 # --- Output helpers ----------------------------------------------------------
 # Colour only when stdout is a TTY and NO_COLOR is unset.
@@ -77,21 +83,22 @@ require_root() {
   fi
 }
 
-# Confirm we are on Ubuntu 24.04. Honour LAB_SKIP_OS_CHECK=1 for CI/dev only.
-require_ubuntu_2404() {
+# Confirm we are on AlmaLinux 10. Honour LAB_SKIP_OS_CHECK=1 for CI/dev only.
+require_almalinux_10() {
   if [[ "${LAB_SKIP_OS_CHECK:-0}" == "1" ]]; then
     warn "LAB_SKIP_OS_CHECK=1 set; skipping OS version check."
     return 0
   fi
-  local id ver
+  local id ver major
   if [[ -r /etc/os-release ]]; then
     # shellcheck disable=SC1091
     . /etc/os-release
     id="${ID:-}"; ver="${VERSION_ID:-}"
   fi
-  if [[ "$id" != "ubuntu" || "$ver" != "24.04" ]]; then
+  major="${ver%%.*}"
+  if [[ "$id" != "almalinux" || "$major" != "10" ]]; then
     err "Unsupported OS: ${id:-unknown} ${ver:-unknown}."
-    err "This lab targets Ubuntu 24.04 LTS. Set LAB_SKIP_OS_CHECK=1 only for dev/CI."
+    err "This lab targets AlmaLinux 10. Set LAB_SKIP_OS_CHECK=1 only for dev/CI."
     exit 1
   fi
 }
@@ -112,6 +119,11 @@ v_summary() {
     "$C_YEL" "$V_WARN" "$C_RESET"
   [[ $V_FAIL -eq 0 ]]
 }
+
+# --- Firewall helpers (firewalld) --------------------------------------------
+firewalld_active()        { systemctl is-active --quiet firewalld; }
+firewalld_has_service()   { firewall-cmd --quiet --query-service="$1" 2>/dev/null; }
+firewalld_has_port()      { firewall-cmd --quiet --query-port="$1" 2>/dev/null; }
 
 # --- Misc helpers ------------------------------------------------------------
 # SIGPIPE-safe random string generators. We read a fixed block from /dev/urandom

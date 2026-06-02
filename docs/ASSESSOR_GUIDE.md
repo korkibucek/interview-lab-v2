@@ -6,7 +6,8 @@ away from candidates).
 
 ## 1. Create the droplet
 
-- DigitalOcean → Create Droplet → **Ubuntu 24.04 (LTS) x64**.
+- DigitalOcean → Create Droplet → **AlmaLinux 10 x64** (see the image note in
+  `docs/DEPLOYMENT.md` if it isn't offered directly).
 - Region **London (LON1)**.
 - Cheapest practical size (Basic / Regular, 1 GB RAM is fine; the disk fault
   adapts to whatever disk size you pick).
@@ -72,16 +73,16 @@ candidate to talk through each fix and their production-prevention ideas.
 
 - Finds the **second layer** of A and B (firewall after the port; permissions
   after the exec bit) instead of declaring victory early.
-- Uses `systemctl status` / `journalctl` / `ss` / `df` / `du` / `ufw status`
-  methodically rather than guessing.
+- Uses `systemctl status` / `journalctl` / `ss` / `df` / `du` /
+  `firewall-cmd --list-all` methodically rather than guessing.
 - Confirms a file is unused (`lsof`) before deleting it.
 - Removes the cron **cause** of the CPU hog, not just the symptom.
 
 ### Red flags
 
 - Rebooting, reinstalling, or wiping configs to "reset" the box.
-- Disabling ufw entirely instead of allowing port 80 (works, but discuss why
-  it's worse than a targeted rule).
+- Disabling firewalld entirely instead of allowing the `http` service (works,
+  but discuss why it's worse than a targeted rule).
 - `chmod 777` / `chown` sprees, or running everything as root with no reasoning.
 - Editing the SSH service and losing access.
 - Deleting `/var/log/verbose-debug.log` without checking it is safe first.

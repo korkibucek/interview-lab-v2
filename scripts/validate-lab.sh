@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scripts/validate-lab.sh
 # Pre-candidate check: confirm the lab is correctly broken AND safe to hand over.
-# Read-only. Exits non-zero if the lab is not ready (any FAIL).
+# Read-only. Exits non-zero if the lab is not ready (any FAIL). AlmaLinux 10.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,14 +44,14 @@ if curl -fsS --max-time 4 "http://127.0.0.1:${WRONG_WEB_PORT}/" >/dev/null 2>&1;
 else
   v_warn "nginx is not answering on :${WRONG_WEB_PORT} either (check nginx state)"
 fi
-if ufw status 2>/dev/null | grep -q "Status: active"; then
-  if ufw status 2>/dev/null | grep -qE "(^|[^0-9])${RIGHT_WEB_PORT}/tcp[[:space:]]+ALLOW"; then
-    v_fail "firewall already allows :${RIGHT_WEB_PORT} (fault A partly fixed)"
+if firewalld_active; then
+  if firewalld_has_service http; then
+    v_fail "firewall already allows HTTP (fault A partly fixed)"
   else
-    v_pass "firewall is active and :${RIGHT_WEB_PORT} is closed"
+    v_pass "firewall is active and HTTP (:${RIGHT_WEB_PORT}) is closed"
   fi
 else
-  v_fail "ufw is not active (firewall layer of fault A is missing)"
+  v_fail "firewalld is not active (firewall layer of fault A is missing)"
 fi
 
 # --- Fault B: app.service broken ---------------------------------------------
@@ -107,11 +107,11 @@ fi
 
 # --- Safety / recoverability -------------------------------------------------
 printf '\n%s-- safety checks --%s\n' "$C_BOLD" "$C_RESET"
-if ufw status 2>/dev/null | grep -q "Status: active"; then
-  if ufw status 2>/dev/null | grep -qE "(22/tcp|OpenSSH)[[:space:]]+ALLOW"; then
-    v_pass "SSH (22) is allowed through the firewall (no lockout)"
+if firewalld_active; then
+  if firewalld_has_service ssh; then
+    v_pass "SSH is allowed through the firewall (no lockout)"
   else
-    v_fail "ufw is active but SSH (22) is NOT allowed -- lockout risk!"
+    v_fail "firewalld is active but SSH is NOT allowed -- lockout risk!"
   fi
 fi
 if [[ "$use_pct" -ge 100 ]]; then
@@ -119,10 +119,10 @@ if [[ "$use_pct" -ge 100 ]]; then
 else
   v_pass "root filesystem has headroom (${use_pct}% used)"
 fi
-if systemctl is-active --quiet ssh; then
-  v_pass "ssh service is running (admin can reconnect)"
+if systemctl is-active --quiet "$SSH_SERVICE"; then
+  v_pass "$SSH_SERVICE is running (admin can reconnect)"
 else
-  v_warn "ssh service not detected as active (verify access path)"
+  v_warn "$SSH_SERVICE not detected as active (verify access path)"
 fi
 
 v_summary

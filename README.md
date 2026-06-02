@@ -1,9 +1,10 @@
 # Interview Lab
 
-A realistic, self-contained **Linux troubleshooting interview lab**. It turns a
-fresh Ubuntu 24.04 server into a deliberately (and safely) broken host that
-looks like a small internal web service that has fallen over. A candidate SSHes
-in and restores it; the assessor scores the result with a single command.
+A realistic, self-contained **Linux troubleshooting interview lab** for
+**AlmaLinux 10**. It turns a fresh AlmaLinux 10 server into a deliberately (and
+safely) broken host that looks like a small internal web service that has fallen
+over. A candidate SSHes in and restores it; the assessor scores the result with
+a single command.
 
 This is not a puzzle box — the faults are ordinary misconfigurations and
 resource problems a real sysadmin meets, layered so the exercise rewards
@@ -11,13 +12,13 @@ diagnosis over memorised commands.
 
 ## What it tests
 
-Six layered objectives across: web service config, firewall, systemd, file
-permissions, DNS, log rotation, cron, process diagnosis, and disk usage. See the
-fault matrix in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Six layered objectives across: web service config, firewall (firewalld),
+systemd, file permissions, DNS, log rotation, cron, process diagnosis, and disk
+usage. See the fault matrix in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Quick start (DigitalOcean)
 
-Create a **Ubuntu 24.04** droplet in **London**, add your SSH key, then:
+Create an **AlmaLinux 10** droplet in **London**, add your SSH key, then:
 
 ```bash
 git clone https://github.com/korkibucek/interview-lab-v2.git
@@ -62,8 +63,9 @@ When finished, **destroy the droplet** (cheapest, safest cleanup).
 
 ## Supported OS
 
-**Ubuntu 24.04 LTS only.** The installer refuses other systems. (An earlier
-AlmaLinux version is archived on the `archived-almalinux-attempt` branch.)
+**AlmaLinux 10 only.** The installer refuses other systems (override only for
+dev/CI with `LAB_SKIP_OS_CHECK=1`). SELinux is set to permissive so the six
+intended faults behave predictably — see `docs/SECURITY.md`.
 
 ## ⚠️ Safety
 
@@ -77,10 +79,20 @@ fault is sized so it can never fill the disk — but you should still:
 
 See [`docs/SECURITY.md`](docs/SECURITY.md).
 
-## Development
+## Development / testing
 
 ```bash
 bash scripts/smoke-test.sh         # bash -n + shellcheck + answer-leak guard
 ```
 
-CI runs the same smoke test on every push/PR (`.github/workflows/ci.yml`).
+The full lifecycle can be exercised in a container:
+
+```bash
+podman run -d --name lab --privileged --systemd=always \
+  -v "$PWD":/opt/interview-lab:ro almalinux:10 /sbin/init
+podman exec lab bash -c 'cp -a /opt/interview-lab /root/lab && cd /root/lab \
+  && LAB_MAX_BIGFILE_BYTES=$((300*1024*1024)) ./deploy/install.sh \
+  && ./scripts/validate-lab.sh'
+```
+
+CI runs the smoke test on every push/PR (`.github/workflows/ci.yml`).

@@ -1,8 +1,8 @@
 # Security Notes
 
-This lab is intended to run on a **disposable** public-cloud VPS and be
-destroyed after each use. It deliberately introduces faults, so treat any lab
-host as untrusted infrastructure.
+This lab is intended to run on a **disposable** public-cloud VPS (AlmaLinux 10)
+and be destroyed after each use. It deliberately introduces faults, so treat any
+lab host as untrusted infrastructure.
 
 ## Threat model / assumptions
 
@@ -15,8 +15,9 @@ host as untrusted infrastructure.
 
 - **Admin:** logs in as `root` using the SSH key added at droplet creation. The
   lab never modifies root's keys or the core SSH service in a breaking way.
-- **Candidate:** a dedicated `candidate` user with passwordless `sudo`
-  (`/etc/sudoers.d/90-candidate`). Provide access one of two ways:
+- **Candidate:** a dedicated `candidate` user in the `wheel` group with
+  passwordless `sudo` (`/etc/sudoers.d/90-candidate`). Provide access one of two
+  ways:
   - **SSH key (recommended):** `LAB_CANDIDATE_PUBKEY=...` at install time. No
     password auth is enabled.
   - **Password (fallback):** the installer generates a random 16-char password,
@@ -28,15 +29,24 @@ host as untrusted infrastructure.
 > SSH is **never** an injected fault. Breaking it would risk locking out both
 > candidate and admin.
 
+## SELinux
+
+The installer sets SELinux to **permissive** (`setenforce 0` plus
+`/etc/selinux/config`). This is a deliberate scope decision so SELinux does not
+become an accidental, hard-to-diagnose fault (e.g. blocking nginx on :8080 or
+the lab docroot). It is documented here for transparency; a future "hard mode"
+could turn an SELinux denial into an intended objective.
+
 ## Built-in safety guards
 
-- **No firewall lockout.** `break-lab.sh` always runs `ufw allow 22/tcp` /
-  `ufw allow OpenSSH` *before* enabling ufw. `validate-lab.sh` FAILs if ufw is
-  active without SSH permitted.
+- **No firewall lockout.** `setup-lab.sh`/`break-lab.sh` always ensure firewalld
+  permits SSH before removing the HTTP service. `validate-lab.sh` FAILs if
+  firewalld is active without SSH permitted.
 - **No full disk.** The disk-pressure file is sized from live free space and is
   capped so the root filesystem never exceeds `DISK_MAX_PCT` (92%) and always
   keeps `DISK_SAFETY_FREE_BYTES` (~1.5 GiB) free. If that can't be done safely,
-  fault F is skipped. `validate-lab.sh` FAILs if usage hits 100%.
+  fault F is skipped. `LAB_MAX_BIGFILE_BYTES` can cap it further.
+  `validate-lab.sh` FAILs if usage hits 100%.
 - **No malicious behaviour.** The faults are misconfigurations and resource
   pressure only — no persistence tricks, credential harvesting, outbound C2, or
   data exfiltration. The "CPU hog" is a plain `yes` process bounded to one

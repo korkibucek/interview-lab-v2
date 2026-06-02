@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # deploy/install.sh
 # One-shot, idempotent installer for the Interview Lab on a fresh
-# DigitalOcean Ubuntu 24.04 droplet.
+# DigitalOcean AlmaLinux 10 droplet.
 #
 #   sudo ./deploy/install.sh
 #
@@ -18,15 +18,15 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$REPO_ROOT/lab/lib/common.sh"
 
 require_root
-require_ubuntu_2404
+require_almalinux_10
 
-log "Installing required packages..."
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y --no-install-recommends \
-  nginx cron ufw curl logrotate ca-certificates
+log "Installing required packages (dnf)..."
+dnf -y makecache >/dev/null 2>&1 || true
+dnf -y install nginx cronie firewalld logrotate curl procps-ng \
+  policycoreutils util-linux sudo openssh-server
 
-systemctl enable --now cron >/dev/null 2>&1 || true
+systemctl enable --now "$CRON_SERVICE" >/dev/null 2>&1 || true
+systemctl enable --now firewalld       >/dev/null 2>&1 || true
 
 # --- Candidate user & access model -------------------------------------------
 log "Creating candidate user '$CANDIDATE_USER'..."
@@ -35,9 +35,10 @@ mkdir -p "$STATE_DIR"; chmod 0700 "$STATE_DIR"
 if ! id "$CANDIDATE_USER" >/dev/null 2>&1; then
   useradd --create-home --shell /bin/bash "$CANDIDATE_USER"
 fi
-usermod -aG sudo "$CANDIDATE_USER"
+usermod -aG "$ADMIN_GROUP" "$CANDIDATE_USER"
 
 # Passwordless sudo so the candidate can work in either key or password mode.
+mkdir -p /etc/sudoers.d
 printf '%s ALL=(ALL) NOPASSWD:ALL\n' "$CANDIDATE_USER" > /etc/sudoers.d/90-candidate
 chmod 0440 /etc/sudoers.d/90-candidate
 visudo -c >/dev/null || die "sudoers validation failed; aborting."
@@ -51,18 +52,19 @@ if [[ -n "${LAB_CANDIDATE_PUBKEY:-}" ]]; then
   chown "$CANDIDATE_USER:$CANDIDATE_USER" "/home/$CANDIDATE_USER/.ssh/authorized_keys"
   # Remove any previous lab password-auth drop-in.
   rm -f /etc/ssh/sshd_config.d/60-lab-candidate.conf
-  systemctl reload ssh 2>/dev/null || true
+  systemctl reload "$SSH_SERVICE" 2>/dev/null || true
   ACCESS_SUMMARY="ssh ${CANDIDATE_USER}@<droplet-ip>   (using the provided key)"
 else
   log "No candidate key provided; generating a one-time password and enabling password auth..."
   CAND_PW="$(rand_alnum 16)"
   printf '%s:%s\n' "$CANDIDATE_USER" "$CAND_PW" | chpasswd
   # Enable password auth for SSH (lab convenience; documented in docs/SECURITY.md).
+  mkdir -p /etc/ssh/sshd_config.d
   cat > /etc/ssh/sshd_config.d/60-lab-candidate.conf <<SSHD
 # Lab: allow the candidate to log in with a password. Remove after the lab.
 PasswordAuthentication yes
 SSHD
-  systemctl reload ssh 2>/dev/null || systemctl restart ssh 2>/dev/null || true
+  systemctl reload "$SSH_SERVICE" 2>/dev/null || systemctl restart "$SSH_SERVICE" 2>/dev/null || true
   {
     printf 'Interview Lab candidate credentials\n'
     printf 'user: %s\n' "$CANDIDATE_USER"

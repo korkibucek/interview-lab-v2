@@ -3,8 +3,8 @@
 > **Do not give this to candidates.** It contains every root cause and fix.
 
 Each objective lists the injected root cause, the diagnostic path a strong
-candidate follows, and a canonical fix. Other valid fixes exist; grade on a
-healthy end state (`validate-fixed.sh`), not on exact commands.
+candidate follows, and a canonical fix (AlmaLinux 10). Other valid fixes exist;
+grade on a healthy end state (`validate-fixed.sh`), not on exact commands.
 
 ---
 
@@ -12,21 +12,22 @@ healthy end state (`validate-fixed.sh`), not on exact commands.
 
 **Root causes**
 1. nginx is configured to `listen 8080` instead of `80`
-   (`/etc/nginx/sites-available/lab`).
-2. ufw is active and does **not** allow port 80 (it allows 22 and 8080).
+   (`/etc/nginx/conf.d/lab.conf`).
+2. firewalld is active and the `http` service is **not** allowed (only `ssh`
+   and port `8080/tcp` are).
 
 **Diagnosis**
 - `curl -I http://127.0.0.1` → connection refused; `curl http://127.0.0.1:8080`
   works → nginx is on the wrong port.
 - `ss -ltnp | grep nginx` confirms it listens on 8080.
-- `sudo ufw status` shows 80 is not permitted → external access still blocked
-  even after moving nginx to 80.
+- `sudo firewall-cmd --list-all` shows `http` is not permitted → external access
+  is still blocked even after moving nginx to 80.
 
 **Canonical fix**
 ```bash
-sudo sed -ri 's/listen (\[::\]:)?8080 /listen \180 /' /etc/nginx/sites-available/lab
+sudo sed -ri 's/listen (\[::\]:)?8080 /listen \180 /' /etc/nginx/conf.d/lab.conf
 sudo nginx -t && sudo systemctl restart nginx
-sudo ufw allow 80/tcp
+sudo firewall-cmd --permanent --add-service=http && sudo firewall-cmd --reload
 curl -I http://127.0.0.1            # 200 OK
 ```
 
@@ -56,19 +57,19 @@ systemctl is-active app.service     # active
 
 ## C. DNS resolution broken
 
-**Root cause:** `/etc/resolv.conf` was replaced with a static file pointing at
-`192.0.2.53` (RFC 5737 TEST-NET, routable nowhere).
+**Root cause:** `/etc/resolv.conf` was overwritten with a static entry pointing
+at `192.0.2.53` (RFC 5737 TEST-NET, routable nowhere).
 
 **Diagnosis**
-- `getent hosts deb.debian.org` hangs/fails; `cat /etc/resolv.conf` shows the
-  bogus nameserver; `resolvectl status` shows the mismatch.
+- `getent hosts mirrors.almalinux.org` hangs/fails; `cat /etc/resolv.conf` shows
+  the bogus nameserver.
 
-**Canonical fix** (restore systemd-resolved stub)
+**Canonical fix** (set a working resolver)
 ```bash
-sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-getent hosts deb.debian.org         # resolves
+echo 'nameserver 1.1.1.1' | sudo tee /etc/resolv.conf
+getent hosts mirrors.almalinux.org  # resolves
 ```
-(Equally valid: set a real nameserver such as `1.1.1.1`.)
+(Equally valid: restore the droplet's original resolver via NetworkManager.)
 
 ---
 
@@ -86,7 +87,7 @@ logger needs.
 **Canonical fix**
 ```bash
 sudo sed -i 's#/var/log/appp/#/var/log/app/#' /etc/logrotate.d/app
-echo '    copytruncate' | sudo tee -a /etc/logrotate.d/app   # or edit the block
+# add `copytruncate` inside the block, then:
 sudo logrotate -f /etc/logrotate.d/app
 ls /var/log/app/app.log.1*          # rotated artifact appears
 ```

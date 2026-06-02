@@ -5,14 +5,21 @@ on:
     branches: [ main ]
   pull_request:
 
+# The lab targets AlmaLinux 10. GitHub-hosted runners are Ubuntu VMs, so we run
+# the static checks *inside* an almalinux:10 container to match the target OS.
 jobs:
   smoke:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    container:
+      image: almalinux:10
     steps:
-      - uses: actions/checkout@v4
+      - name: Install prerequisites (git for checkout, ShellCheck for linting)
+        run: |
+          dnf -y install git-core tar findutils
+          dnf -y install epel-release || true
+          dnf -y install ShellCheck || true
 
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - uses: actions/checkout@v4
 
       - name: Run smoke tests (syntax + shellcheck + leak guard)
         run: bash scripts/smoke-test.sh

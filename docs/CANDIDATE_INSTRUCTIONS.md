@@ -1,6 +1,6 @@
 # Linux Troubleshooting Lab — Candidate Brief
 
-You have been given SSH access to a Linux server (Ubuntu 24.04) that is **not
+You have been given SSH access to a Linux server (AlmaLinux 10) that is **not
 healthy**. It hosts a small internal web service that should be reachable over
 HTTP, but it is currently down — and while investigating you will find the host
 is unwell in a few other ways too.

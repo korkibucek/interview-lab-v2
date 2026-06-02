@@ -28,14 +28,14 @@ if curl -fsS --max-time 4 "http://127.0.0.1:${RIGHT_WEB_PORT}/" >/dev/null 2>&1;
 else
   bad "no HTTP response on :${RIGHT_WEB_PORT}"; a_ok=0
 fi
-if ufw status 2>/dev/null | grep -q "Status: active"; then
-  if ufw status 2>/dev/null | grep -qE "(^|[^0-9])${RIGHT_WEB_PORT}/tcp[[:space:]]+ALLOW"; then
-    good "firewall allows :${RIGHT_WEB_PORT}"
+if firewalld_active; then
+  if firewalld_has_service http; then
+    good "firewall allows HTTP (:${RIGHT_WEB_PORT})"
   else
-    bad "firewall is active but :${RIGHT_WEB_PORT} is still blocked"; a_ok=0
+    bad "firewalld is active but HTTP (:${RIGHT_WEB_PORT}) is still blocked"; a_ok=0
   fi
 else
-  good "firewall inactive (port reachable externally)"
+  good "firewalld inactive (port reachable externally)"
 fi
 [[ $a_ok -eq 1 ]] && PASS=$((PASS+1))
 

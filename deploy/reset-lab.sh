@@ -12,7 +12,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$REPO_ROOT/lab/lib/common.sh"
 
 require_root
-require_ubuntu_2404
+require_almalinux_10
 
 log "Resetting lab to pristine broken state..."
 bash "$REPO_ROOT/scripts/setup-lab.sh"

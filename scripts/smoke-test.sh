@@ -29,7 +29,7 @@ if command -v shellcheck >/dev/null 2>&1; then
     note "  shellcheck reported issues"; fail=1
   fi
 else
-  note "  shellcheck not installed; skipping (install: apt-get install shellcheck)"
+  note "  shellcheck not installed; skipping (install: dnf install ShellCheck)"
 fi
 
 note ""

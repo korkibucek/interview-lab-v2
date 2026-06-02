@@ -2,14 +2,18 @@
 
 ## Requirements
 
-- A fresh **Ubuntu 24.04 LTS** host (DigitalOcean droplet, London region for the
+- A fresh **AlmaLinux 10** host (DigitalOcean droplet, London region for the
   primary use case). The cheapest practical size is fine.
 - Root (or sudo) access.
-- Outbound internet (for `apt` and for the DNS objective).
+- Outbound internet (for `dnf` and for the DNS objective).
 
 The installer refuses to run on other OSes. For local development/CI on a
-non-droplet Ubuntu host you can set `LAB_SKIP_OS_CHECK=1`, but never do that on
-the real lab host.
+non-droplet host you can set `LAB_SKIP_OS_CHECK=1`, but never do that on the
+real lab host.
+
+> **DigitalOcean image note:** if AlmaLinux 10 is not yet offered as a base
+> image in your region, create the droplet from a custom AlmaLinux 10 image, or
+> from AlmaLinux 9 and `dnf` upgrade to 10. The scripts require AlmaLinux 10.
 
 ## Install
 
@@ -30,11 +34,13 @@ re-applies the faults.
 
 What it does:
 
-1. Installs packages: `nginx cron ufw curl logrotate ca-certificates`.
-2. Creates the `candidate` user with passwordless `sudo` and sets up access.
-3. Builds the healthy baseline (`scripts/setup-lab.sh`).
-4. Injects the six faults (`scripts/break-lab.sh`).
-5. Prints candidate access details and next steps.
+1. Installs packages via `dnf`: `nginx cronie firewalld logrotate curl
+   procps-ng policycoreutils util-linux sudo openssh-server`.
+2. Creates the `candidate` user (in `wheel`) with passwordless `sudo`.
+3. Sets SELinux to permissive (so it is not an unintended fault).
+4. Builds the healthy baseline (`scripts/setup-lab.sh`).
+5. Injects the six faults (`scripts/break-lab.sh`).
+6. Prints candidate access details and next steps.
 
 ## Validate
 
@@ -42,13 +48,13 @@ What it does:
 sudo ./scripts/validate-lab.sh      # all PASS, exit 0  → ready for a candidate
 ```
 
-## Ports / firewall
+## Ports / firewall (firewalld)
 
 | Port | Purpose |
 |---|---|
-| 22 | SSH (always allowed) |
+| 22 (ssh) | always allowed |
 | 8080 | misconfigured web port (fault A) |
-| 80 | closed until the candidate fixes fault A |
+| 80 (http) | closed until the candidate fixes fault A |
 
 You may add a DigitalOcean cloud firewall to restrict source IPs.
 

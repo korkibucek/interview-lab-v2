@@ -1,6 +1,6 @@
 # Roadmap
 
-Current state: a working, validated single-host Ubuntu 24.04 lab with six
+Current state: a working, validated single-host AlmaLinux 10 lab with six
 layered faults, idempotent deploy/reset/uninstall, and pre/post validation.
 
 ## Possible future enhancements
@@ -13,6 +13,8 @@ layered faults, idempotent deploy/reset/uninstall, and pre/post validation.
   a permissions cascade, a full inode table) selectable at install.
 - **Time tracking.** Optional timestamping in `validate-fixed.sh` to record how
   long each objective took.
+- **SELinux hard mode.** Turn an SELinux denial (currently set permissive) into
+  an intended objective for senior candidates.
 - **Terraform module.** Codify the DigitalOcean droplet + cloud firewall so the
   whole environment is one `terraform apply` / `destroy`.
 - **Report export.** Have `validate-fixed.sh` emit a JSON/Markdown scorecard for
@@ -23,6 +25,5 @@ layered faults, idempotent deploy/reset/uninstall, and pre/post validation.
 ## Explicit non-goals
 
 - Multi-node / cluster scenarios.
-- Supporting OS families beyond Ubuntu (AlmaLinux attempt is archived on
-  `archived-almalinux-attempt`).
+- Supporting OS families beyond AlmaLinux 10.
 - Anything resembling real malware, persistence, or data exfiltration.
