@@ -51,6 +51,12 @@ Give the candidate:
 
 The admin retains independent root access via the key from step 1.
 
+> The installer makes the on-box repo (which contains the answer key, the
+> breakage script and the lab templates) **root-readable only**, so the candidate
+> cannot simply `cat` the answers. Run all assessor scripts with `sudo`. Note
+> that `candidate` has root-equivalent `sudo`, so a determined candidate could
+> still read those files deliberately — keep the session supervised.
+
 ## 5. Score
 
 ```bash

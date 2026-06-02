@@ -28,6 +28,8 @@ if command -v shellcheck >/dev/null 2>&1; then
   else
     note "  shellcheck reported issues"; fail=1
   fi
+elif [[ -n "${CI:-}" ]]; then
+  note "  shellcheck not installed but is REQUIRED in CI"; fail=1
 else
   note "  shellcheck not installed; skipping (install: dnf install ShellCheck)"
 fi

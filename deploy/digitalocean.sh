@@ -42,19 +42,30 @@ preflight() {
   for t in curl jq ssh ssh-keygen; do
     command -v "$t" >/dev/null 2>&1 || die "missing required tool: $t"
   done
+  # Validate the token early with a clear message (e.g. invalid / wrong scope).
+  api GET /account >/dev/null
 }
 
 # ---- DigitalOcean API helper ------------------------------------------------
 # api METHOD PATH [JSON-body]
+# On any non-2xx response, prints the DigitalOcean error message (not just a
+# terse curl code) and aborts. Never prints the token.
 api() {
-  local method=$1 path=$2 body=${3:-}
+  local method=$1 path=$2 body=${3:-} resp code out msg
   if [[ -n $body ]]; then
-    curl -fsS -X "$method" "$API$path" \
+    resp="$(curl -sS -w $'\n%{http_code}' -X "$method" "$API$path" \
       -H "Authorization: Bearer $DO_TOKEN" \
-      -H "Content-Type: application/json" -d "$body"
+      -H "Content-Type: application/json" -d "$body")" || true
   else
-    curl -fsS -X "$method" "$API$path" -H "Authorization: Bearer $DO_TOKEN"
+    resp="$(curl -sS -w $'\n%{http_code}' -X "$method" "$API$path" \
+      -H "Authorization: Bearer $DO_TOKEN")" || true
   fi
+  code="${resp##*$'\n'}"; out="${resp%$'\n'*}"
+  if ! [[ "$code" =~ ^2[0-9][0-9]$ ]]; then
+    msg="$(jq -r '.message // (.errors|tostring) // empty' <<<"$out" 2>/dev/null || true)"
+    die "DigitalOcean API ${method} ${path} failed (HTTP ${code:-000})${msg:+: ${msg}}"
+  fi
+  printf '%s' "$out"
 }
 
 ssh_lab() {  # ssh_lab <ip> <command...>

@@ -3,6 +3,9 @@
 # Post-candidate check: score whether each objective was actually fixed.
 # Behavioural where possible (tests behaviour, not config text).
 # Prints Score: N/6 and exits non-zero unless all objectives pass.
+#
+# SIDE EFFECT: objective D performs a real (forced) `logrotate -f` on the app
+# log to prove rotation works. It is safe to re-run. No other check mutates state.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,8 +20,9 @@ printf '%s== Interview Lab :: post-candidate validation ==%s\n\n' "$C_BOLD" "$C_
 
 PASS=0; TOTAL=6
 objective() { printf '\n%s* %s%s\n' "$C_BOLD" "$1" "$C_RESET"; }
-good() { printf '  %s[OK]%s   %s\n' "$C_GRN" "$C_RESET" "$*"; }
-bad()  { printf '  %s[FAIL]%s %s\n' "$C_RED" "$C_RESET" "$*"; }
+# Use the shared result tags so both validators read identically.
+good() { mark_pass "$*"; }
+bad()  { mark_fail "$*"; }
 
 # --- A: web reachable on :80 (and not firewalled) ----------------------------
 objective "A. Web service reachable on :${RIGHT_WEB_PORT}"
@@ -29,7 +33,7 @@ else
   bad "no HTTP response on :${RIGHT_WEB_PORT}"; a_ok=0
 fi
 if firewalld_active; then
-  if firewalld_has_service http; then
+  if firewalld_allows_http; then
     good "firewall allows HTTP (:${RIGHT_WEB_PORT})"
   else
     bad "firewalld is active but HTTP (:${RIGHT_WEB_PORT}) is still blocked"; a_ok=0
@@ -56,14 +60,19 @@ else
 fi
 
 # --- D: log rotation works (forced rotation produces an artifact) ------------
+# Behavioural: force a rotation and confirm an artifact appears. Retry briefly
+# so a transient empty log (just after a copytruncate) can't cause a false FAIL;
+# the app-logger writes every ~2s.
 objective "D. Log rotation functioning"
 d_ok=0
-if [[ -s "$APP_LOG" ]] && logrotate -f "$LOGROTATE_CONF" >/dev/null 2>&1; then
-  if compgen -G "${APP_LOG}.1*" >/dev/null; then
+for _ in 1 2 3; do
+  if [[ -s "$APP_LOG" ]] && logrotate -f "$LOGROTATE_CONF" >/dev/null 2>&1 \
+     && compgen -G "${APP_LOG}.1*" >/dev/null; then
     good "forced rotation produced $(compgen -G "${APP_LOG}.1*" | head -1)"
-    d_ok=1
+    d_ok=1; break
   fi
-fi
+  sleep 2
+done
 if [[ $d_ok -eq 1 ]]; then
   PASS=$((PASS+1))
 else

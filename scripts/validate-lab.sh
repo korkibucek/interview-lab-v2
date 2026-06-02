@@ -45,7 +45,7 @@ else
   v_warn "nginx is not answering on :${WRONG_WEB_PORT} either (check nginx state)"
 fi
 if firewalld_active; then
-  if firewalld_has_service http; then
+  if firewalld_allows_http; then
     v_fail "firewall already allows HTTP (fault A partly fixed)"
   else
     v_pass "firewall is active and HTTP (:${RIGHT_WEB_PORT}) is closed"
