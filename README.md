@@ -16,7 +16,25 @@ Six layered objectives across: web service config, firewall (firewalld),
 systemd, file permissions, DNS, log rotation, cron, process diagnosis, and disk
 usage. See the fault matrix in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Quick start (DigitalOcean)
+## Zero-touch deploy (DigitalOcean, one command)
+
+From your own workstation, with a DigitalOcean API token, provision a fully
+self-installing lab droplet — it boots, pulls this repo, runs the installer,
+generates the candidate's SSH key, and tells you how to connect:
+
+```bash
+export DO_TOKEN="dop_v1_..."        # token is read ONLY from the environment
+./deploy/digitalocean.sh create     # creates an AlmaLinux 10 droplet in lon1
+# ... when finished:
+./deploy/digitalocean.sh destroy    # tears down the droplet + admin key
+```
+
+`create` prints the admin SSH command, the **candidate username (`candidate`)**,
+and the path to the generated candidate private key to hand over. Requires
+`bash curl jq ssh ssh-keygen` locally. The token is never written to disk or
+embedded in the droplet. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+## Manual quick start (on an existing droplet)
 
 Create an **AlmaLinux 10** droplet in **London**, add your SSH key, then:
 

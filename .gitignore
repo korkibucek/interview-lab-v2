@@ -4,6 +4,12 @@
 *.log
 /tmp/
 
+# DigitalOcean provisioner state and generated SSH keys (never commit)
+.do-lab/
+*_key
+*_key.pub
+*.pem
+
 # Editor / OS noise
 *.swp
 *~

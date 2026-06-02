@@ -15,7 +15,33 @@ real lab host.
 > image in your region, create the droplet from a custom AlmaLinux 10 image, or
 > from AlmaLinux 9 and `dnf` upgrade to 10. The scripts require AlmaLinux 10.
 
-## Install
+## Option A — zero-touch provisioner (recommended)
+
+`deploy/digitalocean.sh` runs on *your* machine and creates a self-provisioning
+droplet via the DigitalOcean API + cloud-init. It generates an admin key (for
+you) and a candidate key (to hand over), waits until the lab is broken-and-ready,
+and prints the connection details.
+
+```bash
+export DO_TOKEN="dop_v1_..."     # read ONLY from the environment; never stored
+./deploy/digitalocean.sh create  # provision
+./deploy/digitalocean.sh status  # check progress/readiness
+./deploy/digitalocean.sh destroy # tear down droplet + remove the admin key
+```
+
+Defaults (override via env): `LAB_REGION=lon1`, `LAB_SIZE=s-1vcpu-1gb`,
+`LAB_IMAGE=almalinux-10-x64`, `LAB_REPO`, `LAB_BRANCH=main`. State and generated
+keys live in `./.do-lab/` (git-ignored). Requires `bash curl jq ssh ssh-keygen`
+locally.
+
+> `s-1vcpu-512mb-10gb` ($4/mo) also works but the 10 GB disk only reaches ~80%
+> for the disk fault (a WARN); `s-1vcpu-1gb` (25 GB) gives a clean PASS.
+
+> The DigitalOcean API token is never written to disk, never stored in the
+> `.do-lab` state, and never embedded in the droplet (cloud-init does not receive
+> it). Revoke the token when you are done if it was temporary.
+
+## Option B — manual install on an existing droplet
 
 ```bash
 git clone https://github.com/korkibucek/interview-lab-v2.git
