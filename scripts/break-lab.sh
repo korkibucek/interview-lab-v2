@@ -28,6 +28,9 @@ systemctl enable --now firewalld >/dev/null 2>&1 || warn "firewalld not availabl
 if firewalld_active; then
   firewall-cmd --permanent --add-service=ssh >/dev/null 2>&1 || true
   firewall-cmd --permanent --remove-service=http >/dev/null 2>&1 || true
+  # Also drop a port-80 allow a previous candidate may have added, so reset
+  # fully re-closes HTTP however it was opened (service or port).
+  firewall-cmd --permanent --remove-port="${RIGHT_WEB_PORT}/tcp" >/dev/null 2>&1 || true
   firewall-cmd --permanent --add-port="${WRONG_WEB_PORT}/tcp" >/dev/null 2>&1 || true
   firewall-cmd --reload >/dev/null 2>&1 || true
 fi

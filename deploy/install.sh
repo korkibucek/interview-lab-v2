@@ -93,6 +93,13 @@ MOTD
 
 LAB_TOKEN="$(cat "$STATE_DIR/token" 2>/dev/null || echo unknown)"
 
+# --- Keep assessor-only material away from the candidate ---------------------
+# The on-box repo contains the answer key, the breakage script and the lab
+# templates. Make it readable by root only so the candidate cannot trivially
+# `cat` the answers. The assessor runs validate/reset via sudo, which still works.
+chmod -R go-rwx "$REPO_ROOT" 2>/dev/null || true
+log "Restricted the lab repo at $REPO_ROOT to root-only (answer key protected)."
+
 # --- Next steps --------------------------------------------------------------
 printf '\n%s================ LAB INSTALLED ================%s\n' "$C_BOLD" "$C_RESET"
 cat <<SUMMARY

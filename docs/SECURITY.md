@@ -7,9 +7,19 @@ lab host as untrusted infrastructure.
 ## Threat model / assumptions
 
 - The droplet is short-lived and single-purpose.
-- The candidate is semi-trusted and has `sudo` (required to fix services,
-  firewall, and system files).
+- The candidate is semi-trusted and has **passwordless `sudo` — i.e. is
+  root-equivalent** on the box (required to fix services, firewall, and system
+  files). Treat the host accordingly: keep the assessment **supervised**,
+  optionally restrict source IPs with a DigitalOcean cloud firewall, and
+  **destroy the droplet promptly** afterwards. A candidate could use the box for
+  anything during the session.
 - The admin holds an independent SSH key and can always recover the box.
+
+> **Answer material on the host.** The installer makes the on-box repo
+> (answer key, `break-lab.sh`, `validate-fixed.sh`, `lab/` templates)
+> root-readable only, so the candidate cannot trivially `cat` the answers.
+> Because the candidate is root-equivalent they could still read them with
+> `sudo`, but that is a deliberate, observable act rather than a casual `cat`.
 
 ## SSH and access model
 

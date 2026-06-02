@@ -37,6 +37,10 @@ locally.
 > `s-1vcpu-512mb-10gb` ($4/mo) also works but the 10 GB disk only reaches ~80%
 > for the disk fault (a WARN); `s-1vcpu-1gb` (25 GB) gives a clean PASS.
 
+> The disk-pressure fault assumes `/var/log` is on the **root filesystem** (true
+> for standard DigitalOcean droplets). A custom image with a separate `/var` or
+> `/var/log` mount would weaken that fault.
+
 > The DigitalOcean API token is never written to disk, never stored in the
 > `.do-lab` state, and never embedded in the droplet (cloud-init does not receive
 > it). Revoke the token when you are done if it was temporary.

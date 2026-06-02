@@ -109,6 +109,12 @@ v_pass() { printf '%s[PASS]%s %s\n' "$C_GRN" "$C_RESET" "$*"; V_PASS=$((V_PASS+1
 v_fail() { printf '%s[FAIL]%s %s\n' "$C_RED" "$C_RESET" "$*"; V_FAIL=$((V_FAIL+1)); }
 v_warn() { printf '%s[WARN]%s %s\n' "$C_YEL" "$C_RESET" "$*"; V_WARN=$((V_WARN+1)); }
 
+# Indented result tags with no counters, for scripts that tally their own way
+# (e.g. validate-fixed.sh groups checks under objectives). Same tags/colours as
+# above so both validators read identically.
+mark_pass() { printf '  %s[PASS]%s %s\n' "$C_GRN" "$C_RESET" "$*"; }
+mark_fail() { printf '  %s[FAIL]%s %s\n' "$C_RED" "$C_RESET" "$*"; }
+
 # Print a summary line and return non-zero if any check FAILed.
 v_summary() {
   printf '\n%s---------------------------------------------%s\n' "$C_BOLD" "$C_RESET"
@@ -124,6 +130,9 @@ v_summary() {
 firewalld_active()        { systemctl is-active --quiet firewalld; }
 firewalld_has_service()   { firewall-cmd --quiet --query-service="$1" 2>/dev/null; }
 firewalld_has_port()      { firewall-cmd --quiet --query-port="$1" 2>/dev/null; }
+# HTTP is allowed if EITHER the http service OR port 80/tcp is open, so a
+# candidate who runs `firewall-cmd --add-port=80/tcp` is graded as correct.
+firewalld_allows_http()   { firewalld_has_service http || firewalld_has_port "${RIGHT_WEB_PORT}/tcp"; }
 
 # --- Misc helpers ------------------------------------------------------------
 # SIGPIPE-safe random string generators. We read a fixed block from /dev/urandom

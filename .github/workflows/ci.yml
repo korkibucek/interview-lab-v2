@@ -17,7 +17,9 @@ jobs:
         run: |
           dnf -y install git-core tar findutils
           dnf -y install epel-release || true
-          dnf -y install ShellCheck || true
+          # ShellCheck is mandatory: a failure here must fail CI, not be skipped.
+          dnf -y install ShellCheck
+          command -v shellcheck
 
       - uses: actions/checkout@v4
 

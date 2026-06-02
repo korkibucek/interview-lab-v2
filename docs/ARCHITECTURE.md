@@ -69,6 +69,10 @@ The lab runs on a public VPS, so two faults are deliberately bounded:
 
 - **Firewall (A):** firewalld always permits SSH before HTTP is removed. The
   candidate cannot be locked out, and neither can the admin.
+- **Disk (F) assumes a single root filesystem.** The fault measures and fills
+  `/`, placing the file under `/var/log`. This works on standard DigitalOcean
+  droplets (one partition). If `/var` or `/var/log` were a *separate* mount, the
+  file would not create pressure on `/` and the fault would be weakened.
 - **Disk (F):** the large file is sized from live free space. It never pushes
   the root filesystem past `DISK_MAX_PCT` (92%) and always leaves at least
   `DISK_SAFETY_FREE_BYTES` (~1.5 GiB) free. If the disk is too small to do this
