@@ -1,0 +1,15 @@
+[Unit]
+Description=Lab demo application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=appuser
+Group=appuser
+ExecStart=/usr/local/bin/app.sh
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

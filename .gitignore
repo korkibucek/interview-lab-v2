@@ -1,0 +1,10 @@
+# Local lab state / generated artifacts (never commit secrets)
+*.token
+*credentials*.txt
+*.log
+/tmp/
+
+# Editor / OS noise
+*.swp
+*~
+.DS_Store

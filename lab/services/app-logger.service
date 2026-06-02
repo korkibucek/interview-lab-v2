@@ -1,0 +1,12 @@
+[Unit]
+Description=Lab chatty logger (source of /var/log/app/app.log)
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/app-logger.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
