@@ -4,6 +4,12 @@ End-to-end runbook for deploying, validating, running, scoring, and tearing
 down the lab. The internal root causes are in `docs/ANSWER_KEY.md` (keep that
 away from candidates).
 
+> **Quick path:** `scripts/examiner.sh` is a one-command playbook for the
+> zero-touch DigitalOcean flow. Run it with no argument to print the whole
+> sequence, or run a phase: `provision`, `info`, `verify`, `shell`, `score`,
+> `answer-key`, `reset`, `destroy`. It reuses the admin key in `./.do-lab/` so
+> you don't have to hand-type SSH commands. The sections below explain each step.
+
 ## 1. Create the droplet
 
 - DigitalOcean → Create Droplet → **AlmaLinux 10 x64** (see the image note in

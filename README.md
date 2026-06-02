@@ -34,6 +34,14 @@ and the path to the generated candidate private key to hand over. Requires
 `bash curl jq ssh ssh-keygen` locally. The token is never written to disk or
 embedded in the droplet. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
+For the full assessor sequence (provision → verify → score → reset → destroy)
+as one command, use the playbook — run it with no argument to print every step:
+
+```bash
+./scripts/examiner.sh            # print the whole playbook
+./scripts/examiner.sh verify     # run validate-lab on the droplet, etc.
+```
+
 ## Manual quick start (on an existing droplet)
 
 Create an **AlmaLinux 10** droplet in **London**, add your SSH key, then:

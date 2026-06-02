@@ -18,6 +18,9 @@
 - `deploy/digitalocean.sh`: zero-touch DigitalOcean provisioner (create/status/
   destroy) — self-installing droplet via cloud-init, generates admin + candidate
   SSH keys, reads the API token only from `DO_TOKEN`.
+- `scripts/examiner.sh`: examiner playbook/runner that mirrors the full assessor
+  sequence (provision → info → verify → shell → score → answer-key → reset →
+  destroy) over the `./.do-lab` admin key; prints the whole playbook with no args.
 - `scripts/smoke-test.sh` and GitHub Actions CI (shellcheck + syntax + answer
   leak guard).
 - Safety guards: firewall never blocks SSH; disk fault sized to never fill the
