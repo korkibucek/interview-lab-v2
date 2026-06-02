@@ -155,5 +155,11 @@ root_fs_use_pct() { df -P / | awk 'NR==2 { gsub("%","",$5); print $5 }'; }
 # Bytes available on the root filesystem.
 root_fs_avail_bytes() { df -P --block-size=1 / | awk 'NR==2 { print $4 }'; }
 
-# True if a unit is in the "active" state.
-unit_is_active() { systemctl is-active --quiet "$1"; }
+# True only if a unit is genuinely up and stable: ActiveState=active AND
+# SubState=running. We deliberately do NOT use `systemctl is-active`, which
+# returns success for a service stuck in "activating (auto-restart)" — a
+# crash-looping unit would otherwise be mis-graded as healthy.
+unit_is_active() {
+  [[ "$(systemctl show -p ActiveState --value "$1" 2>/dev/null)" == "active" \
+     && "$(systemctl show -p SubState --value "$1" 2>/dev/null)" == "running" ]]
+}
