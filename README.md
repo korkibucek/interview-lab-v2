@@ -78,6 +78,7 @@ When finished, **destroy the droplet** (cheapest, safest cleanup).
 | Candidate (hand this over) | [`docs/CANDIDATE_INSTRUCTIONS.md`](docs/CANDIDATE_INSTRUCTIONS.md) |
 | Assessor runbook + scoring | [`docs/ASSESSOR_GUIDE.md`](docs/ASSESSOR_GUIDE.md) |
 | Internal answer key | [`docs/ANSWER_KEY.md`](docs/ANSWER_KEY.md) |
+| Faults & fixes cheat sheet (assessor) | [`docs/ASSESSOR_CHEATSHEET.md`](docs/ASSESSOR_CHEATSHEET.md) |
 | Deploy / reset / uninstall | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) |
 | Design + fault matrix | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | Security & safety | [`docs/SECURITY.md`](docs/SECURITY.md) |

@@ -69,6 +69,9 @@ The admin retains independent root access via the key from step 1.
 sudo ./scripts/validate-fixed.sh      # prints Score: N/6
 ```
 
+For a one-screen "what's broken & how to fix" brief, see
+[`ASSESSOR_CHEATSHEET.md`](ASSESSOR_CHEATSHEET.md) (assessor-only — contains answers).
+
 ### Scoring rubric (suggested)
 
 | Score | Reading |
